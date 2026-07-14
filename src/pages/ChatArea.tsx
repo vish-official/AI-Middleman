@@ -31,20 +31,27 @@ export default function ChatArea() {
 
   const loadChat = async () => {
     if (!id) {
+      console.log('[DEBUG_FRONTEND] loadChat: no id, clearing messages');
       setChatDetails(null);
       setMessages([]);
       return;
     }
     try {
+      console.log('[DEBUG_FRONTEND] loadChat: fetching chat data for id:', id);
       const data = await api.chats.get(id);
+      console.log('[DEBUG_FRONTEND] loadChat: received chat data:', JSON.stringify(data, null, 2));
       setChatDetails(data);
-      setMessages(data.messages.map((m: any) => ({ id: m.id, role: m.role, content: m.content })));
-    } catch (e) {
+      const mappedMsgs = data.messages.map((m: any) => ({ id: m.id, role: m.role, content: m.content }));
+      console.log('[DEBUG_FRONTEND] loadChat: setting messages to useChat:', JSON.stringify(mappedMsgs, null, 2));
+      setMessages(mappedMsgs);
+    } catch (e: any) {
+      console.error('[DEBUG_FRONTEND] loadChat error:', e.message);
       navigate('/chat');
     }
   };
 
   useEffect(() => {
+    console.log('[DEBUG_FRONTEND] id or chatDetails changed. id:', id, 'chatDetails.id:', chatDetails?.id);
     if (id && chatDetails?.id === id) {
       return;
     }
@@ -52,6 +59,7 @@ export default function ChatArea() {
   }, [id]);
 
   useEffect(() => {
+    console.log('[DEBUG_FRONTEND] messages state updated. Current messages count:', messages.length, 'messages:', JSON.stringify(messages, null, 2));
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 

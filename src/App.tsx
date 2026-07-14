@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import { useAppStore } from './store';
 import { api } from './services/api';
 import LandingPage from './pages/LandingPage';
@@ -29,6 +29,11 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+function ChatAreaWrapper() {
+  const { id } = useParams();
+  return <ChatArea key={id || 'new'} />;
+}
+
 export default function App() {
   // Always force dark mode for this theme
   useEffect(() => {
@@ -44,8 +49,8 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/chat" element={<ChatArea />} />
-              <Route path="/chat/:id" element={<ChatArea />} />
+              <Route path="/chat" element={<ChatAreaWrapper />} />
+              <Route path="/chat/:id" element={<ChatAreaWrapper />} />
               <Route path="/keys" element={<ApiKeysPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
