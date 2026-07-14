@@ -19,49 +19,79 @@ export default function ChatArea() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { messages, input, setInput, handleInputChange, handleSubmit, append, setMessages, isLoading } = useChat({
+  const { messages, input, setInput, handleInputChange, handleSubmit, append, setMessages: originalSetMessages, isLoading } = useChat({
+    id,
+    initialMessages: chatDetails ? chatDetails.messages.map((m: any) => ({ id: m.id, role: m.role, content: m.content })) : [],
     api: '/api/chat',
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     body: { chatId: id },
     onFinish: () => {
+      console.log("[DEBUG] useChat onFinish triggered");
       loadChat();
       api.chats.list().then(setChats);
     }
   });
 
+  const setMessages = (newMessages: any) => {
+    const prevLen = messages.length;
+    let nextLen = 0;
+    if (typeof newMessages === 'function') {
+      const resolved = newMessages(messages);
+      nextLen = resolved ? resolved.length : 0;
+    } else {
+      nextLen = newMessages ? newMessages.length : 0;
+    }
+    console.log("[DEBUG] setMessages called from ChatArea.tsx", {
+      previous: prevLen,
+      next: nextLen,
+    });
+    console.trace();
+    originalSetMessages(newMessages);
+  };
+
+  console.log(`[DEBUG] React render - messages length = ${messages.length}`);
+
   const loadChat = async () => {
+    console.log(`[DEBUG] loadChat() called with id: ${id}`);
     if (!id) {
-      console.log('[DEBUG_FRONTEND] loadChat: no id, clearing messages');
+      console.log("[DEBUG] loadChat() called with no id, calling setMessages([])");
       setChatDetails(null);
       setMessages([]);
       return;
     }
     try {
-      console.log('[DEBUG_FRONTEND] loadChat: fetching chat data for id:', id);
+      console.log(`[DEBUG] Fetching chat for id: ${id}`);
       const data = await api.chats.get(id);
-      console.log('[DEBUG_FRONTEND] loadChat: received chat data:', JSON.stringify(data, null, 2));
+      console.log(`[DEBUG] Backend returned ${data.messages?.length || 0} messages`);
       setChatDetails(data);
       const mappedMsgs = data.messages.map((m: any) => ({ id: m.id, role: m.role, content: m.content }));
-      console.log('[DEBUG_FRONTEND] loadChat: setting messages to useChat:', JSON.stringify(mappedMsgs, null, 2));
+      console.log(`[DEBUG] Calling setMessages() with mapped length: ${mappedMsgs.length}`);
       setMessages(mappedMsgs);
     } catch (e: any) {
-      console.error('[DEBUG_FRONTEND] loadChat error:', e.message);
+      console.error("[DEBUG] loadChat() error:", e.message);
       navigate('/chat');
     }
   };
 
   useEffect(() => {
-    console.log('[DEBUG_FRONTEND] id or chatDetails changed. id:', id, 'chatDetails.id:', chatDetails?.id);
+    console.log(`[DEBUG] useEffect [id] triggered. id: ${id}, chatDetails.id: ${chatDetails?.id}`);
     if (id && chatDetails?.id === id) {
+      console.log("[DEBUG] id matches chatDetails.id, skipping loadChat()");
       return;
     }
     loadChat();
   }, [id]);
 
   useEffect(() => {
-    console.log('[DEBUG_FRONTEND] messages state updated. Current messages count:', messages.length, 'messages:', JSON.stringify(messages, null, 2));
+    console.log(`[DEBUG] useEffect [messages] triggered. messages length: ${messages.length}`);
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (apiKeys.length > 0 && !apiKeys.some(k => k.provider === provider)) {
+      setProvider(apiKeys[0].provider);
+    }
+  }, [apiKeys, provider]);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
