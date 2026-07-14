@@ -254,7 +254,7 @@ async function startServer() {
         model = anthropic('claude-3-5-sonnet-latest');
       } else if (chat.provider === 'gemini') {
         const google = createGoogleGenerativeAI({ apiKey: apiKeyRecord.key });
-        model = google('gemini-2.5-pro'); // Assuming standard alias
+        model = google('gemini-1.5-flash'); // Use stable gemini-1.5-flash to bypass quota limits and model deprecation
       } else if (chat.provider === 'openrouter') {
         const openrouter = createOpenAI({ baseURL: 'https://openrouter.ai/api/v1', apiKey: apiKeyRecord.key });
         model = openrouter('openai/gpt-4o'); // Default openrouter model or we'd need to let them pick, but V1 just uses this

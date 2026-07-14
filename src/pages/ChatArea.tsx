@@ -45,6 +45,9 @@ export default function ChatArea() {
   };
 
   useEffect(() => {
+    if (id && chatDetails?.id === id) {
+      return;
+    }
     loadChat();
   }, [id]);
 
@@ -65,6 +68,11 @@ export default function ChatArea() {
       const newChat = await api.chats.create(title, provider);
       currentChatId = newChat.id;
       isNewChat = true;
+      setChatDetails({
+        ...newChat,
+        messages: [],
+        files: []
+      } as any);
       api.chats.list().then(setChats);
     }
 
@@ -79,10 +87,10 @@ export default function ChatArea() {
       // Append manually with dynamic body to ensure backend gets the right chatId
       const userInput = input;
       setInput(''); // clear immediately for UX
-      await append({ role: 'user', content: userInput }, { options: { body: { chatId: currentChatId } } });
+      await append({ role: 'user', content: userInput }, { body: { chatId: currentChatId } });
       navigate(`/chat/${currentChatId}`, { replace: true });
     } else {
-      handleSubmit(e);
+      handleSubmit(e, { body: { chatId: currentChatId } });
     }
   };
 
